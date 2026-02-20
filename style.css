@@ -9,7 +9,7 @@ html, body {
 #scene {
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at center, #5a6475, #2a2f38);
+  background: radial-gradient(circle at center, #b5c8e9, #2a2f38);
   position: relative;
   overflow: hidden;
 }
