@@ -3,25 +3,30 @@ const student = document.getElementById("student");
 const shadow = document.getElementById("shadow");
 
 scene.addEventListener("mousemove", (e) => {
-  const studentRect = student.getBoundingClientRect();
+  const rect = student.getBoundingClientRect();
 
-  const studentX = studentRect.left + studentRect.width / 2;
-  const studentY = studentRect.top + studentRect.height / 2;
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
 
-  const dx = e.clientX - studentX;
-  const dy = e.clientY - studentY;
+  const dx = e.clientX - centerX;
+  const dy = e.clientY - centerY;
 
   const distance = Math.sqrt(dx * dx + dy * dy);
 
-  // Clamp distance range
   const maxDistance = 400;
-  const normalized = Math.min(distance / maxDistance, 1);
+  const clamped = Math.min(distance, maxDistance);
+  const proximity = 1 - clamped / maxDistance;
+  // proximity = 0 far away, 1 very close
 
-  // Shadow gets closer as distance decreases
-  const offset = -60 + (1 - normalized) * 40;
+  // SHADOW: move closer and grow
+  const moveX = proximity * 40;
+  const scale = 1 + proximity * 0.3;
 
-  shadow.style.transform = `translate(${offset}%, -50%)`;
+  shadow.style.transform = `translate(calc(-50% + ${moveX}px), -50%) scale(${scale})`;
 
-  // Student fades slightly when shadow is close
-  student.style.opacity = 0.6 + normalized * 0.4;
+  // STUDENT: fade when shadow is close
+  student.style.opacity = 1 - proximity * 0.4;
+
+  // ENVIRONMENT: darken when close
+  scene.style.filter = `brightness(${1 - proximity * 0.2})`;
 });
