@@ -5,6 +5,7 @@ const shadow = document.getElementById("shadow");
 const studentWrap = document.getElementById("studentWrap");
 const shadowWrap = document.getElementById("shadowWrap");
 const heart = document.getElementById("heart");
+const arms = document.querySelectorAll(".arm");
 
 
 // Start in the idle state
@@ -14,8 +15,9 @@ shadowWrap.classList.add("idle");
 
 // Track shadow movement and scale for easing
 let currentMoveX = 0;
+let currentMoveY = 0;
 let currentScale = 1;
-
+let isHugging = false;
 
 // Color presets for environment emotion
 const calmInner = { r: 159, g: 182, b: 217 };
@@ -30,6 +32,18 @@ const dangerOuter = { r: 60, g: 10, b: 10 };
 function mix(a, b, t) {
  return Math.round(a + (b - a) * t);
 }
+
+student.addEventListener("mouseenter", () => {
+  isHugging = true;
+  shadow.classList.add("hugging");
+  document.body.classList.add("hugging-arms");
+});
+
+student.addEventListener("mouseleave", () => {
+  isHugging = false;
+  shadow.classList.remove("hugging");
+  document.body.classList.remove("hugging-arms");
+});
 
 
 // Cursor interaction
@@ -61,31 +75,35 @@ scene.addEventListener("mousemove", (e) => {
  const proximity = 1 - clamped / maxDistance;
 
 
- let targetMoveX;
- let targetScale;
+let targetMoveX = 0;
+let targetMoveY = 0;
+let targetScale = 1;
 
+// TRUE HUG STATE
+if (isHugging) {
+  targetMoveX = 0;
+  targetMoveY = 0;
+  targetScale = 1.75;
+}
 
- // Approach state
- if (proximity < 0.75) {
-   targetMoveX = proximity * 40;
-   targetScale = 1 + proximity * 0.3;
- }
- // Hug state
- else {
-   targetMoveX = 0;
-   targetScale = 1.45;
- }
+// PROXIMITY RESPONSE
+else if (proximity > 0.1) {
+  targetMoveX = dx * 0.08;
+  targetMoveY = dy * 0.08;
+  targetScale = 1 + proximity * 0.4;
+}
 
 
  // Easing
- const ease = 0.08;
- currentMoveX += (targetMoveX - currentMoveX) * ease;
- currentScale += (targetScale - currentScale) * ease;
+const ease = isHugging ? 0.05 : 0.08;
+currentMoveX += (targetMoveX - currentMoveX) * ease;
+currentMoveY += (targetMoveY - currentMoveY) * ease;
+currentScale += (targetScale - currentScale) * ease;
 
 
  // Apply shadow transform
- shadow.style.transform =
-   `translate(${currentMoveX}px, 0px) scale(${currentScale})`;
+shadow.style.transform =
+  `translate(${currentMoveX}px, ${currentMoveY}px) scale(${currentScale})`;
 
 
  // Student fades slightly
@@ -113,6 +131,9 @@ scene.addEventListener("mousemove", (e) => {
  scene.style.background =
    `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
 
+shadow.style.background = isHugging
+  ? "rgba(15, 15, 34, 0.9)"
+  : "rgba(15, 15, 34, 0.7)";
 
  // Heart response
  if (heart) {
