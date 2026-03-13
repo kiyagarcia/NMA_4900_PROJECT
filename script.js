@@ -66,6 +66,15 @@ scene.addEventListener("mousemove", (e) => {
  const dy = e.clientY - centerY;
  const distance = Math.sqrt(dx * dx + dy * dy);
 
+ const eyes = document.querySelectorAll(".shadow-eye");
+
+eyes.forEach(eye => {
+  const moveX = dx * 0.01;
+  const moveY = dy * 0.01;
+
+  eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
+});
+
 
  const maxDistance = 400;
  const clamped = Math.min(distance, maxDistance);
@@ -73,6 +82,11 @@ scene.addEventListener("mousemove", (e) => {
 
  // 0 far, 1 close
  const proximity = 1 - clamped / maxDistance;
+
+ eyes.forEach(eye => {
+  const scale = 1 + proximity * 1.2;
+  eye.style.transform += ` scale(${scale})`;
+});
 
 
 let targetMoveX = 0;
