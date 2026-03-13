@@ -19,13 +19,21 @@ html, body {
 
 /* Student: lightest */
 #student {
- width: 120px;
- height: 180px;
- background: rgba(226, 239, 255, 0.95);
- border-radius: 60px;
+ width: 140px;
+ height: auto;
+ position: relative;
  transition: opacity 0.2s ease;
- position: relative;   /* THIS LINE IS CRUCIAL */
 }
+
+#selfCharacter {
+  width: 140px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(255,255,255,0.2));
+}
+
 
 #shadow {
   position: absolute;
@@ -33,10 +41,39 @@ html, body {
   pointer-events: none;
 }
 
+.shadow-eye {
+ position: absolute;
+ width: 18px;
+ height: 18px;
+ background: rgba(240,240,255,0.9);
+ border-radius: 50%;
+
+ top: 38%;
+
+ transition:
+   transform 0.2s ease,
+   height 0.2s ease,
+   border-radius 0.2s ease;
+}
+
+.left-eye {
+ left: 30%;
+}
+
+.right-eye {
+ left: 66%;
+}
+
+#shadow.hugging .shadow-eye {
+ height: 8px;
+ border-radius: 0 0 10px 10px;
+ transform: scale(1.6);
+}
+
 .shadow-core {
   position: absolute;
-  width: 260px;
-  height: 300px;
+  width: 320px;
+  height: 360px;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -134,16 +171,14 @@ html, body {
  animation-play-state: running;
 }
 
-
 #heart {
  position: absolute;
- top: 50%;
+ top: 58%;
  left: 50%;
  width: 14px;
  height: 14px;
  background: red;
  transform: translate(-50%, -50%) rotate(45deg);
- border-radius: 3px;
  animation: heartbeat 2.2s ease-in-out infinite;
  z-index: 3;
 }
