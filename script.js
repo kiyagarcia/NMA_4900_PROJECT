@@ -6,7 +6,66 @@ const studentWrap = document.getElementById("studentWrap");
 const shadowWrap = document.getElementById("shadowWrap");
 const heart = document.getElementById("heart");
 const arms = document.querySelectorAll(".arm");
+const bubbleCount = 12;
 
+
+let cursorActive = false;
+let mouseX = window.innerWidth / 2;
+let mouseY = window.innerHeight / 2;
+let proximity = 0;
+
+function createBubble() {
+  const bubble = document.createElement("div");
+  bubble.classList.add("bubble");
+
+  // RANDOM SIZE
+const size = Math.random() * 30 + 20;
+  bubble.style.width = `${size}px`;
+  bubble.style.height = `${size}px`;
+
+  // RANDOM X POSITION
+  bubble.style.left = `${Math.random() * 100}%`;
+
+  // RANDOM SPEED
+  const duration = Math.random() * 4 + 5;
+  bubble.style.animationDuration = `${duration}s`;
+
+  scene.appendChild(bubble);
+
+  // REMOVE + RESPAWN (INFINITE LOOP)
+  setTimeout(() => {
+    bubble.remove();
+    createBubble();
+  }, duration * 1000);
+}
+
+function spawnDangerBubble() {
+  if (Math.random() > 0.08) return;
+
+  const bubble = document.createElement("div");
+  bubble.classList.add("bubble", "danger");
+
+const size = Math.random() * 35 + 25;
+  bubble.style.width = `${size}px`;
+  bubble.style.height = `${size}px`;
+
+  bubble.style.left = `${Math.random() * 100}%`;
+  bubble.style.top = `-20px`;
+
+  scene.appendChild(bubble);
+
+  setTimeout(() => {
+    bubble.remove();
+  }, 1500);
+}
+
+for (let i = 0; i < bubbleCount; i++) {
+  setTimeout(() => {
+    createBubble();
+  }, Math.random() * 2000);
+}
+
+scene.classList.add("idle");
 
 // Start in the idle state
 studentWrap.classList.add("idle");
@@ -46,13 +105,24 @@ student.addEventListener("mouseleave", () => {
 });
 
 
+  scene.addEventListener("mouseenter", () => {
+  cursorActive = true;
+});
+
 // Cursor interaction
 scene.addEventListener("mousemove", (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
 
+  scene.style.filter = "none";
+
+scene.style.setProperty('--distort', proximity);
+scene.style.setProperty("--glow", Math.max(0, proximity));
 
  // Stop idle floating
  studentWrap.classList.remove("idle");
  shadowWrap.classList.remove("idle");
+ scene.classList.remove("idle");
 
 
  // Get student center
@@ -81,12 +151,20 @@ eyes.forEach(eye => {
 
 
  // 0 far, 1 close
- const proximity = 1 - clamped / maxDistance;
+proximity = 1 - clamped / maxDistance;
+ const shapes = document.querySelectorAll(".bg-shape");
+
+shapes.forEach(shape => {
+  shape.style.transform = `scale(${1 - proximity * 0.5})`;
+  shape.style.opacity = 0.2 - proximity * 0.2;
+});
+
 
  eyes.forEach(eye => {
   const scale = 1 + proximity * 1.2;
   eye.style.transform += ` scale(${scale})`;
 });
+
 
 
 let targetMoveX = 0;
@@ -102,10 +180,9 @@ if (isHugging) {
 
 // PROXIMITY RESPONSE
 else if (proximity > 0.1) {
-  targetMoveX = dx * 0.08;
-  targetMoveY = dy * 0.08;
-  targetScale = 1 + proximity * 0.4;
-}
+targetMoveX = dx * 0.08;
+targetMoveY = dy * 0.08;
+targetScale = 1 + proximity * 0.3;}
 
 
  // Easing
@@ -145,30 +222,34 @@ shadow.style.transform =
  scene.style.background =
    `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
 
-shadow.style.background = isHugging
-  ? "rgba(15, 15, 34, 0.9)"
-  : "rgba(15, 15, 34, 0.7)";
+shadow.querySelector(".shadow-core").style.background =
+  `rgba(15, 15, 34, ${0.6 + proximity * 0.4})`;
 
  // Heart response
  if (heart) {
    heart.style.animationDuration = `${2.2 - proximity * 1.2}s`;
    heart.style.opacity = 0.4 + proximity * 0.4;
  }
+
 });
 
 
 // Cursor leaves scene
 scene.addEventListener("mouseleave", () => {
 
+cursorActive = false;
 
  // Resume idle floating
  studentWrap.classList.add("idle");
  shadowWrap.classList.add("idle");
 
 
+
+
  // Reset visuals
  student.style.opacity = "1";
  shadow.style.transform = "translate(0px, 0px) scale(1)";
+scene.classList.add("idle");
 
 
  scene.style.background =
@@ -184,3 +265,67 @@ scene.addEventListener("mouseleave", () => {
  currentMoveX = 0;
  currentScale = 1;
 });
+
+function handleBubbleStates(proximity) {
+  const bubbles = document.querySelectorAll(".bubble");
+
+  bubbles.forEach(bubble => {
+
+    // BEFORE CURSOR → ONLY FLOAT
+    if (!cursorActive) {
+      bubble.classList.remove("freeze", "danger");
+      bubble.style.animationPlayState = "running";
+      return;
+    }
+
+    // FAR
+    if (proximity < 0.4) {
+bubble.classList.remove("freeze", "danger", "warning");
+      bubble.style.animationPlayState = "running";
+    }
+
+    // MID (freeze)
+    else if (proximity >= 0.4 && proximity < 0.75) {
+  bubble.classList.add("freeze");
+  bubble.classList.add("warning");
+  bubble.style.animationPlayState = "paused";
+}
+
+    // CLOSE (transform)
+    else {
+      if (!bubble.classList.contains("danger")) {
+        bubble.classList.remove("freeze");
+        bubble.classList.add("danger");
+      }
+    }
+
+  });
+
+  // 🚫 BLOCK SPAWN BEFORE CURSOR
+  if (cursorActive && proximity > 0.75) {
+    spawnDangerBubble();
+  }
+}
+
+function update() {
+
+  const rect = student.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const dx = mouseX - centerX;
+  const dy = mouseY - centerY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  const maxDistance = 400;
+  const clamped = Math.min(distance, maxDistance);
+
+  proximity = 1 - clamped / maxDistance;
+
+if (cursorActive) {
+  handleBubbleStates(proximity);
+}
+  requestAnimationFrame(update);
+}
+
+update();
