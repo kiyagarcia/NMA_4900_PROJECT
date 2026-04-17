@@ -22,7 +22,7 @@ html, body {
  width: 140px;
  height: auto;
  position: relative;
- transition: opacity 0.2s ease;
+ transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 #selfCharacter {
@@ -212,4 +212,181 @@ html, body {
  15%  { transform: translate(-50%, -50%) rotate(45deg) scale(1.2); }
  30%  { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
  100% { transform: translate(-50%, -50%) rotate(45deg) scale(1); }
+}
+
+@keyframes environmentBreath {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+#scene.idle {
+  animation: environmentBreath 8s ease-in-out infinite;
+}
+
+
+.bubble {
+  position: absolute;
+  bottom: -60px;
+  width: 24px;
+  height: 24px;
+
+  border-radius: 50%;
+
+  /* glassy bubble look */
+  background: radial-gradient(circle at 30% 30%,
+    rgba(255,255,255,0.8),
+    rgba(255,255,255,0.2) 40%,
+    rgba(255,255,255,0.05) 60%,
+    rgba(255,255,255,0.1) 100%
+  );
+
+  border: 1px solid rgba(255,255,255,0.3);
+
+  box-shadow:
+    inset -4px -6px 10px rgba(255,255,255,0.15),
+    inset 4px 4px 10px rgba(0,0,0,0.1),
+    0 0 6px rgba(255,255,255,0.2);
+
+  pointer-events: none;
+
+  animation: floatUp 7s linear infinite;
+}
+
+.bubble::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+  }
+  50% {
+    transform: translateY(-60vh) translateX(10px) scale(1.05);
+  }
+  100% {
+    transform: translateY(-120vh) translateX(-10px) scale(1.1);
+  }
+}
+
+.bubble.danger {
+  background: black;
+  border-radius: 50%;
+
+  transform: scale(1.8);
+
+  box-shadow:
+    0 0 12px rgba(0,0,0,0.9),
+    inset 0 0 10px rgba(255,255,255,0.05);
+
+  animation: fallDown 1.6s ease-in forwards;
+}
+
+/* SPIKES */
+.bubble.danger::before,
+.bubble.danger::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* outer spike layer */
+.bubble.danger::before {
+  background:
+    conic-gradient(
+      from 0deg,
+      black 0deg 10deg,
+      transparent 10deg 30deg
+    );
+  filter: blur(0.5px);
+}
+
+/* inner sharper spikes */
+.bubble.danger::after {
+  background:
+    conic-gradient(
+      from 15deg,
+      black 0deg 8deg,
+      transparent 8deg 28deg
+    );
+}
+
+@keyframes fallDown {
+  0% {
+    transform: translateY(0) scale(1.2) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(140vh) scale(1.8) rotate(180deg);
+    opacity: 0.9;
+  }
+}
+
+.bubble.warning {
+  animation: floatUp 7s linear infinite;
+}
+
+.bubble.warning::before {
+  animation: subtleShake 0.6s ease-in-out infinite;
+}
+
+@keyframes subtleShake {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+.bubble.freeze {
+  animation-play-state: paused;
+}
+
+#scene::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  opacity: 0.5;
+  filter: blur(60px);
+
+  background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.08), transparent 60%),
+              radial-gradient(circle at 70% 60%, rgba(255,255,255,0.06), transparent 60%);
+
+  filter: blur(40px);
+  animation: bgDrift 20s linear infinite;
+}
+
+@keyframes bgDrift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(-40px, 30px); }
+  100% { transform: translate(0, 0); }
+}
+
+#scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+
+  background: radial-gradient(circle at center,
+    rgba(255,255,255,0.08),
+    transparent 40%
+  );
+
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#scene::after {
+  opacity: var(--glow);
 }
