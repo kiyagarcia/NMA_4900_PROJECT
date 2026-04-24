@@ -18,6 +18,10 @@ let shadowActivated = false;
 heart.addEventListener("click", () => {
   shadowActivated = true;
   shadowWrap.style.opacity = "1";
+  document.body.classList.add("shadow-active");
+
+  const instruction = document.getElementById("instruction");
+  if (instruction) instruction.style.display = "none";
 });
 
 scene.classList.add("idle");
@@ -78,6 +82,7 @@ student.addEventListener("mouseleave", () => {
 scene.addEventListener("mousemove", (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
+  if (!shadowActivated) return;
 
   scene.style.filter = "none";
 
