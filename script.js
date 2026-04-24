@@ -6,64 +6,19 @@ const studentWrap = document.getElementById("studentWrap");
 const shadowWrap = document.getElementById("shadowWrap");
 const heart = document.getElementById("heart");
 const arms = document.querySelectorAll(".arm");
-const bubbleCount = 12;
+const heartbeatSound = document.getElementById("heartbeatSound");
 
 
 let cursorActive = false;
 let mouseX = window.innerWidth / 2;
 let mouseY = window.innerHeight / 2;
 let proximity = 0;
+let shadowActivated = false;
 
-function createBubble() {
-  const bubble = document.createElement("div");
-  bubble.classList.add("bubble");
-
-  // RANDOM SIZE
-const size = Math.random() * 30 + 20;
-  bubble.style.width = `${size}px`;
-  bubble.style.height = `${size}px`;
-
-  // RANDOM X POSITION
-  bubble.style.left = `${Math.random() * 100}%`;
-
-  // RANDOM SPEED
-  const duration = Math.random() * 4 + 5;
-  bubble.style.animationDuration = `${duration}s`;
-
-  scene.appendChild(bubble);
-
-  // REMOVE + RESPAWN (INFINITE LOOP)
-  setTimeout(() => {
-    bubble.remove();
-    createBubble();
-  }, duration * 1000);
-}
-
-function spawnDangerBubble() {
-  if (Math.random() > 0.08) return;
-
-  const bubble = document.createElement("div");
-  bubble.classList.add("bubble", "danger");
-
-const size = Math.random() * 35 + 25;
-  bubble.style.width = `${size}px`;
-  bubble.style.height = `${size}px`;
-
-  bubble.style.left = `${Math.random() * 100}%`;
-  bubble.style.top = `-20px`;
-
-  scene.appendChild(bubble);
-
-  setTimeout(() => {
-    bubble.remove();
-  }, 1500);
-}
-
-for (let i = 0; i < bubbleCount; i++) {
-  setTimeout(() => {
-    createBubble();
-  }, Math.random() * 2000);
-}
+heart.addEventListener("click", () => {
+  shadowActivated = true;
+  shadowWrap.style.opacity = "1";
+});
 
 scene.classList.add("idle");
 
@@ -98,6 +53,14 @@ student.addEventListener("mouseenter", () => {
   document.body.classList.add("hugging-arms");
 });
 
+heart.addEventListener("mouseenter", () => {
+  heart.style.transform = "translate(-50%, -50%) scale(1.3) rotate(45deg)";
+});
+
+heart.addEventListener("mouseleave", () => {
+  heart.style.transform = "translate(-50%, -50%) scale(1) rotate(45deg)";
+}); 
+
 student.addEventListener("mouseleave", () => {
   isHugging = false;
   shadow.classList.remove("hugging");
@@ -107,6 +70,8 @@ student.addEventListener("mouseleave", () => {
 
   scene.addEventListener("mouseenter", () => {
   cursorActive = true;
+  heartbeatSound.volume = 0;
+  heartbeatSound.play();
 });
 
 // Cursor interaction
@@ -115,6 +80,11 @@ scene.addEventListener("mousemove", (e) => {
   mouseY = e.clientY;
 
   scene.style.filter = "none";
+
+  if (cursorActive) {
+  heartbeatSound.volume = proximity * 0.5;   // louder as it gets closer
+  heartbeatSound.playbackRate = 0.8 + proximity * 1.2; // faster heartbeat
+}
 
 scene.style.setProperty('--distort', proximity);
 scene.style.setProperty("--glow", Math.max(0, proximity));
@@ -222,8 +192,10 @@ shadow.style.transform =
  scene.style.background =
    `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
 
-shadow.querySelector(".shadow-core").style.background =
-  `rgba(15, 15, 34, ${0.6 + proximity * 0.4})`;
+const core = shadow.querySelector(".shadow-core");
+if (core) {
+  core.style.background = `rgba(15, 15, 34, ${0.6 + proximity * 0.4})`;
+}
 
  // Heart response
  if (heart) {
@@ -236,6 +208,9 @@ shadow.querySelector(".shadow-core").style.background =
 
 // Cursor leaves scene
 scene.addEventListener("mouseleave", () => {
+
+  heartbeatSound.pause();
+heartbeatSound.currentTime = 0;
 
 cursorActive = false;
 
@@ -266,46 +241,7 @@ scene.classList.add("idle");
  currentScale = 1;
 });
 
-function handleBubbleStates(proximity) {
-  const bubbles = document.querySelectorAll(".bubble");
 
-  bubbles.forEach(bubble => {
-
-    // BEFORE CURSOR → ONLY FLOAT
-    if (!cursorActive) {
-      bubble.classList.remove("freeze", "danger");
-      bubble.style.animationPlayState = "running";
-      return;
-    }
-
-    // FAR
-    if (proximity < 0.4) {
-bubble.classList.remove("freeze", "danger", "warning");
-      bubble.style.animationPlayState = "running";
-    }
-
-    // MID (freeze)
-    else if (proximity >= 0.4 && proximity < 0.75) {
-  bubble.classList.add("freeze");
-  bubble.classList.add("warning");
-  bubble.style.animationPlayState = "paused";
-}
-
-    // CLOSE (transform)
-    else {
-      if (!bubble.classList.contains("danger")) {
-        bubble.classList.remove("freeze");
-        bubble.classList.add("danger");
-      }
-    }
-
-  });
-
-  // 🚫 BLOCK SPAWN BEFORE CURSOR
-  if (cursorActive && proximity > 0.75) {
-    spawnDangerBubble();
-  }
-}
 
 function update() {
 
@@ -322,10 +258,4 @@ function update() {
 
   proximity = 1 - clamped / maxDistance;
 
-if (cursorActive) {
-  handleBubbleStates(proximity);
-}
-  requestAnimationFrame(update);
-}
-
-update();
+update();}
