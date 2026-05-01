@@ -304,3 +304,34 @@ html, body {
   backdrop-filter: blur(6px);          /* optional, adds that shield feel */
 }
 
+#soundInstruction {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  
+  color: rgba(255,255,255,0.95);
+  font-size: 20px;
+  letter-spacing: 1px;
+  text-align: center;
+
+  z-index: 10;
+  pointer-events: none;
+
+  /* 👇 THIS is the important part */
+  text-shadow: 0 0 8px rgba(0,0,0,0.4);
+
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+@keyframes instructionPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+#soundInstruction.fade-out {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
