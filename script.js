@@ -154,7 +154,20 @@ function handleMove(x, y) {
     const moveY = dy * 0.01;
     const scale = 1 + proximity * 1.2;
 
-    const angle = proximity > 0.6 ? 45 : proximity > 0.3 ? 20 : 0;
+    eyes.forEach(eye => {
+  const moveX = dx * 0.01;
+  const moveY = dy * 0.01;
+  const scale = 1 + proximity * 1.4;
+
+  let angle = 0;
+  if (proximity > 0.6) angle = 45;
+  else if (proximity > 0.3) angle = 20;
+
+  eye.style.transform =
+    "translate(" + moveX + "px, " + moveY + "px) " +
+    "scale(" + scale + ") " +
+    "rotate(" + (eye.classList.contains('left-eye') ? angle : -angle) + "deg)";
+});
 
     eye.style.transform = `
       translate(${moveX}px, ${moveY}px)
@@ -225,7 +238,11 @@ if (proximity > 0.7) {
 }
 
   const ease = isHugging ? 0.05 : 0.08;
+  if ("ontouchstart" in window) {
+  currentScale = targetScale; // 🔥 instant for touch
+} else {
   currentScale += (targetScale - currentScale) * ease;
+}
 
   shadow.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
 
@@ -269,8 +286,11 @@ scene.addEventListener("touchmove", (e) => {
 }, { passive: false });
 
 // 👇 ALSO ADD THIS (important)
-scene.addEventListener("touchstart", () => {
+scene.addEventListener("touchstart", (e) => {
   cursorActive = true;
+
+  const touch = e.touches[0];
+  handleMove(touch.clientX, touch.clientY);
 });
 
 // Cursor leaves scene
@@ -284,9 +304,6 @@ cursorActive = false;
  // Resume idle floating
  studentWrap.classList.add("idle");
  shadowWrap.classList.add("idle");
-
-
-
 
  // Reset visuals
  student.style.opacity = "1";
@@ -302,7 +319,6 @@ scene.classList.add("idle");
    heart.style.animationDuration = "2.2s";
    heart.style.opacity = "0.6";
  }
-
 
  currentMoveX = 0;
  currentScale = 1;
