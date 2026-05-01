@@ -262,14 +262,6 @@ if (proximity > 0.7) {
   }
 }
 
-function animate() {
-  if (isTouching) {
-    handleMove(mouseX, mouseY);
-  }
-  requestAnimationFrame(animate);
-}
-
-animate();
 
 scene.addEventListener("mousemove", (e) => {
   handleMove(e.clientX, e.clientY);
@@ -281,7 +273,11 @@ scene.addEventListener("touchstart", (e) => {
   cursorActive = true;
 
   const touch = e.touches[0];
-  handleMove(touch.clientX, touch.clientY);
+
+  mouseX = touch.clientX;
+  mouseY = touch.clientY;
+
+  handleMove(mouseX, mouseY);
 
 }, { passive: false });
 
@@ -292,7 +288,12 @@ scene.addEventListener("touchmove", (e) => {
   e.preventDefault();
 
   const touch = e.touches[0];
-  handleMove(touch.clientX, touch.clientY);
+
+  // 🔥 THIS LINE IS THE FIX
+  mouseX = touch.clientX;
+  mouseY = touch.clientY;
+
+  handleMove(mouseX, mouseY);
 
 }, { passive: false });
 
