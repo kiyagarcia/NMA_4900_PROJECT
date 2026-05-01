@@ -10,6 +10,7 @@ const hand = document.getElementById("hand");
 let heartTriggered = false;
 
 let audioUnlocked = false;
+let isTouching = false;
 
 function unlockAudio() {
   if (audioUnlocked) return;
@@ -261,23 +262,43 @@ if (proximity > 0.7) {
   }
 }
 
+function animate() {
+  if (isTouching) {
+    handleMove(mouseX, mouseY);
+  }
+  requestAnimationFrame(animate);
+}
+
+animate();
+
 scene.addEventListener("mousemove", (e) => {
   handleMove(e.clientX, e.clientY);
 });
 
-// 👇 ADD TOUCH RIGHT HERE
-scene.addEventListener("touchmove", (e) => {
-  e.preventDefault();
-  const touch = e.touches[0];
-  handleMove(touch.clientX, touch.clientY);
-}, { passive: false });
-
-// 👇 ALSO ADD THIS (important)
+// TOUCH START
 scene.addEventListener("touchstart", (e) => {
+  isTouching = true;
   cursorActive = true;
 
   const touch = e.touches[0];
   handleMove(touch.clientX, touch.clientY);
+
+}, { passive: false });
+
+// TOUCH MOVE
+scene.addEventListener("touchmove", (e) => {
+  if (!isTouching) return;
+
+  e.preventDefault();
+
+  const touch = e.touches[0];
+  handleMove(touch.clientX, touch.clientY);
+
+}, { passive: false });
+
+// TOUCH END (this is IMPORTANT)
+scene.addEventListener("touchend", () => {
+  isTouching = false;
 });
 
 // Cursor leaves scene
