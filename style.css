@@ -8,31 +8,34 @@ html, body {
 
 /* Environment: mid tone */
 #scene {
- width: 100%;
- height: 100%;
- background: radial-gradient(circle at center, #9fb6d9, #2a4f8a);
- position: relative;
- overflow: hidden;
- transition: background 0.2s linear, filter 0.3s ease;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at center, #9fb6d9, #2a4f8a);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s linear, filter 0.3s ease;
+
+  transform-origin: center;
+  animation: bgHeartbeat 3s ease-in-out infinite;
+}
+
+#scene {
+  animation: none;
+}
+
+#scene.active {
+  animation: bgHeartbeat 3s ease-in-out infinite;
 }
 
 
 /* Student: lightest */
 #student {
- width: 140px;
+ width: 50px;
  height: auto;
  position: relative;
  transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-#selfCharacter {
-  width: 140px;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-  pointer-events: none;
-  filter: drop-shadow(0 0 12px rgba(255,255,255,0.2));
-}
 
 
 #shadow {
@@ -42,27 +45,20 @@ html, body {
 }
 
 .shadow-eye {
- position: absolute;
- width: 18px;
- height: 18px;
- background: rgba(240,240,255,0.9);
- border-radius: 50%;
-
- top: 38%;
-
- transition:
-   transform 0.2s ease,
-   height 0.2s ease,
-   border-radius 0.2s ease;
+  position: absolute;
+  top: 38%;                 /* 👈 moves eyes UP */
+  width: 16px;
+  height: 16px;
+  background: rgba(240,240,255,0.95);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
-.left-eye {
- left: 30%;
-}
+/* 👇 wider spacing */
+.left-eye { left: 25%; }
+.right-eye { left: 65%; }
 
-.right-eye {
- left: 66%;
-}
+
 
 #shadow.hugging .shadow-eye {
  height: 8px;
@@ -77,65 +73,40 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(15, 15, 34, 0.65);
+  background: rgba(0, 0, 0, 0.65);
   border-radius: 50%;
   z-index: 1;
 }
 
-.arm {
+.part {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 110px;
-  height: 40px;
-  background: rgba(15, 15, 34, 0.8);
-  border-radius: 40px;
-
-  opacity: 0;
-  visibility: hidden; /* THIS fixes your problem */
-
+  transform: translate(-50%, -50%);
   pointer-events: none;
-  z-index: 3;
 
-  transition:
-    transform 0.6s ease,
-    opacity 0.4s ease;
+  width: 100%;     /* 🔥 THIS makes parts follow #student size */
+  height: auto;
 }
 
-/* Start position — pulled outward */
-.left-arm {
-  transform: translate(-160px, -50%);
+.student-img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
-.right-arm {
-  transform: translate(50px, -50%);
-}
-
-/* Hug state — slide inward */
-.hugging-arms .left-arm {
-  opacity: 1;
-  transform: translate(-95px, -50%);
-}
-
-.hugging-arms .right-arm {
-  opacity: 1;
-  transform: translate(-15px, -50%);
-}
-
-.shadow-active .arm {
-  opacity: 1;
-  visibility: visible;
-}
-
-#shadow.hugging .shadow-core {
-  background: rgba(15, 15, 34, 0.85);
-}
 
 #studentWrap, #shadowWrap {
- position: absolute;
- top: 50%;
- left: 50%;
- transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+ 
+}
+
+#student {
+  width: 110px;   /* 🔥 smaller */
+  height: auto;
+  position: relative;
 }
 
 
@@ -144,24 +115,17 @@ html, body {
 }
 
 
-#shadowWrap {
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.6s ease;
-}
-
-
 @keyframes floatSelf {
- 0% { transform: translate(-50%, -50%) translateY(0); }
- 50% { transform: translate(-50%, -50%) translateY(-18px); }
- 100% { transform: translate(-50%, -50%) translateY(0); }
+  0% { transform: translate(-50%, -50%) translateY(0); }
+  50% { transform: translate(-50%, -50%) translateY(-18px); }
+  100% { transform: translate(-50%, -50%) translateY(0); }
 }
 
 
 @keyframes floatProtector {
- 0% { transform: translate(-50%, -50%) translateY(0); }
- 50% { transform: translate(-50%, -50%) translateY(12px); }
- 100% { transform: translate(-50%, -50%) translateY(0); }
+  0% { transform: translate(-50%, -50%) scale(1) translateY(0); }
+  50% { transform: translate(-50%, -50%) scale(1) translateY(12px); }
+  100% { transform: translate(-50%, -50%) scale(1) translateY(0); }
 }
 
 
@@ -169,57 +133,6 @@ html, body {
 #studentWrap {
  animation: floatSelf 6s ease-in-out infinite;
  animation-play-state: paused;
-}
-
-#school {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 34%;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.45;
-}
-
-/* base building style */
-.b {
-  position: absolute;
-  bottom: 0;
-  background: rgba(8, 22, 55, 0.9);
-  border-radius: 2px;
-}
-
-/* variations = skyline */
-.b1 { left: 0%;   width: 18%; height: 55%; }
-.b2 { left: 18%;  width: 22%; height: 70%; }
-.b3 { left: 40%;  width: 20%; height: 60%; }
-.b4 { left: 60%;  width: 25%; height: 75%; }
-
-/* slight depth variation */
-.b2 { background: rgba(8, 22, 55, 1); }
-.b4 { background: rgba(8, 22, 55, 0.85); }
-
-
-
-.windows {
-  position: absolute;
-  bottom: 20%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
-}
-
-.w1 { left: 3%;  width: 12%; }
-.w2 { left: 22%; width: 14%; }
-.w3 { left: 63%; width: 16%; }
-
-.windows::before,
-.windows::after {
-  content: "";
-  display: block;
-  height: 6px;
-  background: rgba(255,255,255,0.35);
-  border-radius: 2px;
 }
 
 #school::after {
@@ -233,12 +146,6 @@ html, body {
     transparent 60%
   );
 }
-
-#shadowWrap {
- animation: floatProtector 7.5s ease-in-out infinite;
- animation-play-state: paused;
-}
-
 
 #studentWrap.idle, #shadowWrap.idle {
  animation-play-state: running;
@@ -293,10 +200,18 @@ html, body {
   100% { transform: scale(1); }
 }
 
-#scene.idle {
-  animation: environmentBreath 8s ease-in-out infinite;
+#scene {
+  transform-origin: center;
 }
 
+@keyframes bgHeartbeat {
+  0%   { transform: scale(1); }
+  12%  { transform: scale(1.015); }  /* first beat */
+  20%  { transform: scale(1); }
+  28%  { transform: scale(1.01); }   /* second smaller beat */
+  40%  { transform: scale(1); }
+  100% { transform: scale(1); }      /* rest period */
+}
 
 #scene::before {
   content: "";
@@ -337,23 +252,55 @@ html, body {
   opacity: var(--glow);
 }
 
-#instruction {
-  position: absolute;
-  top: 70%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: rgba(255,255,255,0.7);
-  font-size: 14px;
-  letter-spacing: 1px;
-  text-align: center;
-  z-index: 5;
 
-  animation: fadePulse 2s ease-in-out infinite;
+
+#background {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+#school {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
 }
 
-@keyframes fadePulse {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
+#studentWrap {
+  z-index: 3;
 }
+
+#shadowWrap {
+  z-index: 2;
+  opacity: 0;
+  transition: 
+    opacity 0.4s ease,
+    z-index 0s linear 0.4s; /* delay swap slightly */
+
+  animation: floatProtector 7.5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+#hand {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 70px;
+  pointer-events: none;
+
+  transform: translate(-50%, -50%) rotate(90deg); /* 👈 rotate here */
+  transform-origin: center;
+
+  z-index: 999;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.4));
+  opacity: 0.95;
+}
+
+
+#shadowWrap.shield .shadow-core {
+  background: rgba(15, 15, 34, 0.35); /* softer fill */
+  backdrop-filter: blur(6px);          /* optional, adds that shield feel */
+}
+
