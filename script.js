@@ -5,24 +5,35 @@ const shadow = document.getElementById("shadow");
 const studentWrap = document.getElementById("studentWrap");
 const shadowWrap = document.getElementById("shadowWrap");
 const heart = document.getElementById("heart");
-const arms = document.querySelectorAll(".arm");
 const heartbeatSound = document.getElementById("heartbeatSound");
+const hand = document.getElementById("hand");
+let heartTriggered = false;
 
+let audioUnlocked = false;
+
+function unlockAudio() {
+  if (audioUnlocked) return;
+
+  heartbeatSound.volume = 0;
+  heartbeatSound.play().then(() => {
+    heartbeatSound.pause();
+    heartbeatSound.currentTime = 0;
+    audioUnlocked = true;
+  }).catch(() => {});
+}
+
+// real interactions browsers accept
+window.addEventListener("click", unlockAudio);
+window.addEventListener("keydown", unlockAudio);
+
+shadowWrap.style.opacity = "1";
+document.body.classList.add("shadow-active");
 
 let cursorActive = false;
 let mouseX = window.innerWidth / 2;
 let mouseY = window.innerHeight / 2;
 let proximity = 0;
-let shadowActivated = false;
 
-heart.addEventListener("click", () => {
-  shadowActivated = true;
-  shadowWrap.style.opacity = "1";
-  document.body.classList.add("shadow-active");
-
-  const instruction = document.getElementById("instruction");
-  if (instruction) instruction.style.display = "none";
-});
 
 scene.classList.add("idle");
 
@@ -54,7 +65,6 @@ function mix(a, b, t) {
 student.addEventListener("mouseenter", () => {
   isHugging = true;
   shadow.classList.add("hugging");
-  document.body.classList.add("hugging-arms");
 });
 
 heart.addEventListener("mouseenter", () => {
@@ -68,31 +78,47 @@ heart.addEventListener("mouseleave", () => {
 student.addEventListener("mouseleave", () => {
   isHugging = false;
   shadow.classList.remove("hugging");
-  document.body.classList.remove("hugging-arms");
 });
 
 
   scene.addEventListener("mouseenter", () => {
   cursorActive = true;
-  heartbeatSound.volume = 0;
-  heartbeatSound.play();
+
+  if (audioUnlocked) {
+    heartbeatSound.volume = 0.05;
+    heartbeatSound.play().catch(() => {});
+  }
 });
 
 // Cursor interaction
 scene.addEventListener("mousemove", (e) => {
   mouseX = e.clientX;
   mouseY = e.clientY;
-  if (!shadowActivated) return;
+  hand.style.left = e.clientX + "px";
+hand.style.top = e.clientY + "px";
+
+  
 
   scene.style.filter = "none";
 
   if (cursorActive) {
-  heartbeatSound.volume = proximity * 0.5;   // louder as it gets closer
-  heartbeatSound.playbackRate = 0.8 + proximity * 1.2; // faster heartbeat
+  // make sure it's playing
+  if (heartbeatSound.paused) {
+    heartbeatSound.currentTime = 0;
+    heartbeatSound.play().catch(() => {});
+  }
+
+  // smoother + audible volume curve
+  heartbeatSound.volume = Math.max(0.05, proximity * 0.8);
+
+  // slow → fast
+  heartbeatSound.playbackRate = 0.6 + proximity * 1.6;
 }
+
 
 scene.style.setProperty('--distort', proximity);
 scene.style.setProperty("--glow", Math.max(0, proximity));
+
 
  // Stop idle floating
  studentWrap.classList.remove("idle");
@@ -116,31 +142,70 @@ scene.style.setProperty("--glow", Math.max(0, proximity));
 eyes.forEach(eye => {
   const moveX = dx * 0.01;
   const moveY = dy * 0.01;
+  const scale = 1 + proximity * 1.2;
 
-  eye.style.transform = `translate(${moveX}px, ${moveY}px)`;
-});
+const angle = proximity > 0.4 ? 25 : 0;
+
+eye.style.transform = `
+  translate(${moveX}px, ${moveY}px)
+  scale(${scale})
+  rotate(${eye.classList.contains('left-eye') ? angle : -angle}deg)
+`;});
 
 
  const maxDistance = 400;
  const clamped = Math.min(distance, maxDistance);
 
+ proximity = 1 - clamped / maxDistance;
+ 
+ const shield = document.getElementById("shield");
 
- // 0 far, 1 close
-proximity = 1 - clamped / maxDistance;
- const shapes = document.querySelectorAll(".bg-shape");
+const shieldStart = 0.45;
+const shieldEnd = 0.85;
 
-shapes.forEach(shape => {
-  shape.style.transform = `scale(${1 - proximity * 0.5})`;
-  shape.style.opacity = 0.2 - proximity * 0.2;
-});
+let shieldStrength = 0;
 
+if (proximity > shieldStart) {
+  shieldStrength = (proximity - shieldStart) / (shieldEnd - shieldStart);
+  shieldStrength = Math.min(shieldStrength, 1);
+}
 
- eyes.forEach(eye => {
-  const scale = 1 + proximity * 1.2;
-  eye.style.transform += ` scale(${scale})`;
-});
+// opacity grows clearly
+shield.style.opacity = shieldStrength * 0.8;
 
+// slight scale up makes it feel like it's "activating"
+const shieldScale = 1 + shieldStrength * 0.05;
+shield.style.transform = `translate(-50%, -50%) scale(${shieldScale})`;
 
+ if (proximity > 0.6 && !heartTriggered) {
+  heartTriggered = true;
+
+  // restart visual
+  heart.style.animation = "none";
+  heart.offsetHeight;
+  heart.style.animation = "heartbeat 2.2s ease-in-out infinite";
+
+  // 🔥 THIS is what you add
+  heartbeatSound.currentTime = 0;
+
+  // make sure it plays
+  heartbeatSound.play().catch(() => {});
+}
+
+if (cursorActive) {
+  if (heartbeatSound.paused) {
+    heartbeatSound.play().catch(() => {});
+  }
+
+  heartbeatSound.volume = Math.max(0.05, proximity * 0.8);
+  heartbeatSound.playbackRate = 0.6 + proximity * 1.6;
+}
+
+ if (proximity > 0.5) {
+  hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1.1)";
+} else {
+  hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1)";
+}
 
 let targetMoveX = 0;
 let targetMoveY = 0;
@@ -153,11 +218,14 @@ if (isHugging) {
   targetScale = 1.75;
 }
 
-// PROXIMITY RESPONSE
-else if (proximity > 0.1) {
-targetMoveX = dx * 0.08;
-targetMoveY = dy * 0.08;
-targetScale = 1 + proximity * 0.3;}
+targetMoveX = 0;
+targetMoveY = 0;
+
+if (isHugging) {
+  targetScale = 1.75;
+} else {
+  targetScale = 1 + proximity * 0.2;
+}
 
 
  // Easing
@@ -169,13 +237,11 @@ currentScale += (targetScale - currentScale) * ease;
 
  // Apply shadow transform
 shadow.style.transform =
-  `translate(${currentMoveX}px, ${currentMoveY}px) scale(${currentScale})`;
+  `translate(-50%, -50%) scale(${currentScale})`;
 
 
  // Student fades slightly
- student.style.opacity = 1 - proximity * 0.5;
-
-
+student.style.opacity = 1 - proximity * 0.9;
  // Environment color shift
  const t = proximity;
 
@@ -198,15 +264,21 @@ shadow.style.transform =
    `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
 
 const core = shadow.querySelector(".shadow-core");
+
 if (core) {
-  core.style.background = `rgba(15, 15, 34, ${0.6 + proximity * 0.4})`;
+  // same shieldStrength we calculated earlier
+  core.style.background = `rgba(15, 15, 34, ${0.6 - shieldStrength * 0.1})`;
 }
 
  // Heart response
  if (heart) {
-   heart.style.animationDuration = `${2.2 - proximity * 1.2}s`;
-   heart.style.opacity = 0.4 + proximity * 0.4;
- }
+  const beatSpeed = 2.6 - proximity * 2.0;
+  const scale = 1 + proximity * 0.15;
+
+  heart.style.animationDuration = `${beatSpeed}s`;
+  heart.style.opacity = 0.5 + proximity * 0.5;
+  heart.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(45deg)`;
+}
 
 });
 
@@ -245,22 +317,3 @@ scene.classList.add("idle");
  currentMoveX = 0;
  currentScale = 1;
 });
-
-
-
-function update() {
-
-  const rect = student.getBoundingClientRect();
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-
-  const dx = mouseX - centerX;
-  const dy = mouseY - centerY;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  const maxDistance = 400;
-  const clamped = Math.min(distance, maxDistance);
-
-  proximity = 1 - clamped / maxDistance;
-
-update();}
