@@ -107,6 +107,42 @@ student.addEventListener("mouseleave", () => {
   }
 });
 
+function handleMove(x, y) {
+  mouseX = x;
+  mouseY = y;
+
+  hand.style.left = x + "px";
+  hand.style.top = y + "px";
+
+  scene.style.filter = "none";
+
+  if (cursorActive && audioUnlocked) {
+    heartbeatSound.play().catch(() => {});
+    heartbeatSound.volume = Math.max(0.08, proximity * 0.8);
+    heartbeatSound.playbackRate = 0.7 + proximity * 1.6;
+  }
+
+  scene.style.setProperty('--distort', proximity);
+  scene.style.setProperty("--glow", Math.max(0, proximity));
+
+  studentWrap.classList.remove("idle");
+  shadowWrap.classList.remove("idle");
+  scene.classList.remove("idle");
+
+  const rect = student.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  const dx = x - centerX;
+  const dy = y - centerY;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  const maxDistance = 700;
+  const clamped = Math.min(distance, maxDistance);
+
+  let raw = 1 - clamped / maxDistance;
+  proximity = Math.pow(raw, 1.5);
+
 // Cursor interaction
 scene.addEventListener("mousemove", (e) => {
   mouseX = e.clientX;
@@ -287,7 +323,23 @@ if (core) {
 }
 
 });
+}
 
+scene.addEventListener("mousemove", (e) => {
+  handleMove(e.clientX, e.clientY);
+});
+
+// 👇 ADD TOUCH RIGHT HERE
+scene.addEventListener("touchmove", (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  handleMove(touch.clientX, touch.clientY);
+}, { passive: false });
+
+// 👇 ALSO ADD THIS (important)
+scene.addEventListener("touchstart", () => {
+  cursorActive = true;
+});
 
 // Cursor leaves scene
 scene.addEventListener("mouseleave", () => {
@@ -300,8 +352,6 @@ cursorActive = false;
  // Resume idle floating
  studentWrap.classList.add("idle");
  shadowWrap.classList.add("idle");
-
-
 
 
  // Reset visuals
