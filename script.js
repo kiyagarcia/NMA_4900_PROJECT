@@ -154,7 +154,7 @@ eyes.forEach(eye => {
   const moveY = dy * 0.01;
   const scale = 1 + proximity * 1.2;
 
-const angle = proximity > 0.4 ? 25 : 0;
+const angle = proximity > 0.2 ? 25 : 0;
 
 eye.style.transform = `
   translate(${moveX}px, ${moveY}px)
@@ -163,14 +163,25 @@ eye.style.transform = `
 `;});
 
 
- const maxDistance = 400;
+ const maxDistance = 700;
  const clamped = Math.min(distance, maxDistance);
 
- proximity = 1 - clamped / maxDistance;
- 
+let raw = 1 - clamped / maxDistance;
+
+// ease curve (slow start, stronger end)
+proximity = Math.pow(raw, 1.5);
+
+const studentImg = document.querySelector(".student-img");
+
+if (proximity > 0.85) {
+  studentImg.src = "The_Self_Design_crossed.svg";
+} else {
+  studentImg.src = "The_Self_Design_2.svg";
+}
+
  const shield = document.getElementById("shield");
 
-const shieldStart = 0.45;
+const shieldStart = 0.3;
 const shieldEnd = 0.85;
 
 let shieldStrength = 0;
