@@ -145,20 +145,23 @@ function handleMove(x, y) {
   const clamped = Math.min(distance, maxDistance);
 
   let raw = 1 - clamped / maxDistance;
-  proximity = Math.pow(raw, 1.5);
+ const targetProximity = Math.pow(raw, 1.5);
+
+// smooth interpolation
+proximity += (targetProximity - proximity) * 0.12;
 
   // 👁️ EYES FOLLOW
   const eyes = document.querySelectorAll(".shadow-eye");
 
   eyes.forEach(eye => {
-  const moveX = dx * 0.01;
-  const moveY = dy * 0.01;
+  const moveX = dx * 0.008;
+  const moveY = dy * 0.008;
 
   // 👇 make eyes grow
   const scale = 1 + proximity * 1.4;
 
   // 👇 stronger angles
-  const angle = proximity > 0.65 ? 55 : proximity > 0.35 ? 25 : 0;
+  const angle = proximity * 60;
 
   // 👇 THIS is the key part
   if (proximity > 0.6) {
@@ -228,16 +231,9 @@ function handleMove(x, y) {
     hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1)";
   }
 
-  // 🌑 SHADOW SCALE
-  let targetScale;
 
-if (proximity > 0.7) {
-  targetScale = 1.9; // 🔥 BIG defensive mode
-} else if (proximity > 0.4) {
-  targetScale = 1.3; // mid alert
-} else {
-  targetScale = 1; // calm
-}
+
+  const targetScale = 1 + proximity * 1.0;
 
   const ease = isHugging ? 0.05 : 0.08;
   if ("ontouchstart" in window) {
@@ -252,7 +248,7 @@ if (proximity > 0.7) {
   student.style.opacity = 1 - proximity * 0.9;
 
   // 🎨 BACKGROUND COLOR SHIFT
-  const t = proximity;
+  const t = proximity * 0.9;
 
   const innerColor = `rgb(
     ${mix(calmInner.r, dangerInner.r, t)},
