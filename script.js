@@ -107,7 +107,9 @@ student.addEventListener("mouseleave", () => {
   }
 });
 
+// 🔥 MAIN INTERACTION FUNCTION (mouse + touch both use this)
 function handleMove(x, y) {
+
   mouseX = x;
   mouseY = y;
 
@@ -129,6 +131,7 @@ function handleMove(x, y) {
   shadowWrap.classList.remove("idle");
   scene.classList.remove("idle");
 
+  // 📍 get center of student
   const rect = student.getBoundingClientRect();
   const centerX = rect.left + rect.width / 2;
   const centerY = rect.top + rect.height / 2;
@@ -143,186 +146,107 @@ function handleMove(x, y) {
   let raw = 1 - clamped / maxDistance;
   proximity = Math.pow(raw, 1.5);
 
-// Cursor interaction
-scene.addEventListener("mousemove", (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
-  hand.style.left = e.clientX + "px";
-hand.style.top = e.clientY + "px";
+  // 👁️ EYES FOLLOW
+  const eyes = document.querySelectorAll(".shadow-eye");
 
-  
+  eyes.forEach(eye => {
+    const moveX = dx * 0.01;
+    const moveY = dy * 0.01;
+    const scale = 1 + proximity * 1.2;
 
-  scene.style.filter = "none";
+    const angle = proximity > 0.2 ? 25 : 0;
 
- if (cursorActive && audioUnlocked) {
-  heartbeatSound.play().catch(() => {}); // 🔥 always ensure it's running
+    eye.style.transform = `
+      translate(${moveX}px, ${moveY}px)
+      scale(${scale})
+      rotate(${eye.classList.contains('left-eye') ? angle : -angle}deg)
+    `;
+  });
 
-  heartbeatSound.volume = Math.max(0.08, proximity * 0.8);
-  heartbeatSound.playbackRate = 0.7 + proximity * 1.6;
-}
+  // 🔁 SWITCH STUDENT IMAGE
+  const studentImg = document.querySelector(".student-img");
 
+  if (proximity > 0.85) {
+    studentImg.src = "The_Self_Design_crossed.svg";
+  } else {
+    studentImg.src = "The_Self_Design_2.svg";
+  }
 
-scene.style.setProperty('--distort', proximity);
-scene.style.setProperty("--glow", Math.max(0, proximity));
+  // 🛡️ SHIELD
+  const shield = document.getElementById("shield");
 
+  const shieldStart = 0.3;
+  const shieldEnd = 0.85;
 
- // Stop idle floating
- studentWrap.classList.remove("idle");
- shadowWrap.classList.remove("idle");
- scene.classList.remove("idle");
+  let shieldStrength = 0;
 
+  if (proximity > shieldStart) {
+    shieldStrength = (proximity - shieldStart) / (shieldEnd - shieldStart);
+    shieldStrength = Math.min(shieldStrength, 1);
+  }
 
- // Get student center
- const rect = student.getBoundingClientRect();
- const centerX = rect.left + rect.width / 2;
- const centerY = rect.top + rect.height / 2;
+  shield.style.opacity = shieldStrength * 0.8;
 
+  const shieldScale = 1 + shieldStrength * 0.05;
+  shield.style.transform = `translate(-50%, -50%) scale(${shieldScale})`;
 
- // Cursor distance from student
- const dx = e.clientX - centerX;
- const dy = e.clientY - centerY;
- const distance = Math.sqrt(dx * dx + dy * dy);
+  // ❤️ HEART
+  if (proximity > 0.6 && !heartTriggered) {
+    heartTriggered = true;
 
- const eyes = document.querySelectorAll(".shadow-eye");
+    heart.style.animation = "none";
+    heart.offsetHeight;
+    heart.style.animation = "heartbeat 2.2s ease-in-out infinite";
+  }
 
-eyes.forEach(eye => {
-  const moveX = dx * 0.01;
-  const moveY = dy * 0.01;
-  const scale = 1 + proximity * 1.2;
-
-const angle = proximity > 0.2 ? 25 : 0;
-
-eye.style.transform = `
-  translate(${moveX}px, ${moveY}px)
-  scale(${scale})
-  rotate(${eye.classList.contains('left-eye') ? angle : -angle}deg)
-`;});
-
-
- const maxDistance = 700;
- const clamped = Math.min(distance, maxDistance);
-
-let raw = 1 - clamped / maxDistance;
-
-// ease curve (slow start, stronger end)
-proximity = Math.pow(raw, 1.5);
-
-const studentImg = document.querySelector(".student-img");
-
-if (proximity > 0.85) {
-  studentImg.src = "The_Self_Design_crossed.svg";
-} else {
-  studentImg.src = "The_Self_Design_2.svg";
-}
-
- const shield = document.getElementById("shield");
-
-const shieldStart = 0.3;
-const shieldEnd = 0.85;
-
-let shieldStrength = 0;
-
-if (proximity > shieldStart) {
-  shieldStrength = (proximity - shieldStart) / (shieldEnd - shieldStart);
-  shieldStrength = Math.min(shieldStrength, 1);
-}
-
-// opacity grows clearly
-shield.style.opacity = shieldStrength * 0.8;
-
-// slight scale up makes it feel like it's "activating"
-const shieldScale = 1 + shieldStrength * 0.05;
-shield.style.transform = `translate(-50%, -50%) scale(${shieldScale})`;
-
-if (proximity > 0.6 && !heartTriggered) {
-  heartTriggered = true;
-
-  heart.style.animation = "none";
-  heart.offsetHeight;
-  heart.style.animation = "heartbeat 2.2s ease-in-out infinite";
-
-}
-
- if (proximity > 0.5) {
-  hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1.1)";
-} else {
-  hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1)";
-}
-
-let targetMoveX = 0;
-let targetMoveY = 0;
-let targetScale = 1;
-
-// TRUE HUG STATE
-if (isHugging) {
-  targetMoveX = 0;
-  targetMoveY = 0;
-  targetScale = 1.75;
-}
-
-targetMoveX = 0;
-targetMoveY = 0;
-
-if (isHugging) {
-  targetScale = 1.75;
-} else {
-  targetScale = 1 + proximity * 0.2;
-}
-
-
- // Easing
-const ease = isHugging ? 0.05 : 0.08;
-currentMoveX += (targetMoveX - currentMoveX) * ease;
-currentMoveY += (targetMoveY - currentMoveY) * ease;
-currentScale += (targetScale - currentScale) * ease;
-
-
- // Apply shadow transform
-shadow.style.transform =
-  `translate(-50%, -50%) scale(${currentScale})`;
-
-
- // Student fades slightly
-student.style.opacity = 1 - proximity * 0.9;
- // Environment color shift
- const t = proximity;
-
-
- const innerColor = `rgb(
-   ${mix(calmInner.r, dangerInner.r, t)},
-   ${mix(calmInner.g, dangerInner.g, t)},
-   ${mix(calmInner.b, dangerInner.b, t)}
- )`;
-
-
- const outerColor = `rgb(
-   ${mix(calmOuter.r, dangerOuter.r, t)},
-   ${mix(calmOuter.g, dangerOuter.g, t)},
-   ${mix(calmOuter.b, dangerOuter.b, t)}
- )`;
-
-
- scene.style.background =
-   `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
-
-const core = shadow.querySelector(".shadow-core");
-
-if (core) {
-  // same shieldStrength we calculated earlier
-  core.style.background = `rgba(15, 15, 34, ${0.6 - shieldStrength * 0.1})`;
-}
-
- // Heart response
- if (heart) {
   const beatSpeed = 2.6 - proximity * 2.0;
-  const scale = 1 + proximity * 0.15;
+  const heartScale = 1 + proximity * 0.15;
 
   heart.style.animationDuration = `${beatSpeed}s`;
   heart.style.opacity = 0.5 + proximity * 0.5;
-  heart.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(45deg)`;
-}
+  heart.style.transform = `translate(-50%, -50%) scale(${heartScale}) rotate(45deg)`;
 
-});
+  // ✋ HAND SCALE
+  if (proximity > 0.5) {
+    hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1.1)";
+  } else {
+    hand.style.transform = "translate(-50%, -50%) rotate(90deg) scale(1)";
+  }
+
+  // 🌑 SHADOW SCALE
+  let targetScale = isHugging ? 1.75 : 1 + proximity * 0.2;
+
+  const ease = isHugging ? 0.05 : 0.08;
+  currentScale += (targetScale - currentScale) * ease;
+
+  shadow.style.transform = `translate(-50%, -50%) scale(${currentScale})`;
+
+  // 👤 STUDENT FADE
+  student.style.opacity = 1 - proximity * 0.9;
+
+  // 🎨 BACKGROUND COLOR SHIFT
+  const t = proximity;
+
+  const innerColor = `rgb(
+    ${mix(calmInner.r, dangerInner.r, t)},
+    ${mix(calmInner.g, dangerInner.g, t)},
+    ${mix(calmInner.b, dangerInner.b, t)}
+  )`;
+
+  const outerColor = `rgb(
+    ${mix(calmOuter.r, dangerOuter.r, t)},
+    ${mix(calmOuter.g, dangerOuter.g, t)},
+    ${mix(calmOuter.b, dangerOuter.b, t)}
+  )`;
+
+  scene.style.background =
+    `radial-gradient(circle at center, ${innerColor}, ${outerColor})`;
+
+  const core = shadow.querySelector(".shadow-core");
+
+  if (core) {
+    core.style.background = `rgba(15, 15, 34, ${0.6 - shieldStrength * 0.1})`;
+  }
 }
 
 scene.addEventListener("mousemove", (e) => {
