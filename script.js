@@ -151,18 +151,32 @@ function handleMove(x, y) {
   const eyes = document.querySelectorAll(".shadow-eye");
 
   eyes.forEach(eye => {
-    const moveX = dx * 0.01;
-    const moveY = dy * 0.01;
-    const scale = 1 + proximity * 1.2;
+  const moveX = dx * 0.01;
+  const moveY = dy * 0.01;
 
-    const angle = proximity > 0.6 ? 45 : proximity > 0.3 ? 20 : 0;
+  // 👇 make eyes grow
+  const scale = 1 + proximity * 1.4;
 
-    eye.style.transform = `
-      translate(${moveX}px, ${moveY}px)
-      scale(${scale})
-      rotate(${eye.classList.contains('left-eye') ? angle : -angle}deg)
-    `;
-  });
+  // 👇 stronger angles
+  const angle = proximity > 0.65 ? 55 : proximity > 0.35 ? 25 : 0;
+
+  // 👇 THIS is the key part
+  if (proximity > 0.6) {
+    // angry eye shape
+    eye.style.borderRadius = "0 0 100px 100px";
+    eye.style.height = "10px"; 
+  } else {
+    // normal circle
+    eye.style.borderRadius = "50%";
+    eye.style.height = "16px";
+  }
+
+  eye.style.transform = `
+    translate(${moveX}px, ${moveY}px)
+    scale(${scale})
+    rotate(${eye.classList.contains('left-eye') ? angle : -angle}deg)
+  `;
+});
 
   // 🔁 SWITCH STUDENT IMAGE
   const studentImg = document.querySelector(".student-img");
