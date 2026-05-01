@@ -154,7 +154,7 @@ function handleMove(x, y) {
     const moveY = dy * 0.01;
     const scale = 1 + proximity * 1.2;
 
-    const angle = proximity > 0.2 ? 25 : 0;
+    const angle = proximity > 0.6 ? 45 : proximity > 0.3 ? 20 : 0;
 
     eye.style.transform = `
       translate(${moveX}px, ${moveY}px)
@@ -214,7 +214,15 @@ function handleMove(x, y) {
   }
 
   // 🌑 SHADOW SCALE
-  let targetScale = isHugging ? 1.75 : 1 + proximity * 0.2;
+  let targetScale;
+
+if (proximity > 0.7) {
+  targetScale = 1.9; // 🔥 BIG defensive mode
+} else if (proximity > 0.4) {
+  targetScale = 1.3; // mid alert
+} else {
+  targetScale = 1; // calm
+}
 
   const ease = isHugging ? 0.05 : 0.08;
   currentScale += (targetScale - currentScale) * ease;
@@ -245,7 +253,7 @@ function handleMove(x, y) {
   const core = shadow.querySelector(".shadow-core");
 
   if (core) {
-    core.style.background = `rgba(15, 15, 34, ${0.6 - shieldStrength * 0.1})`;
+    core.style.background = `rgba(15, 15, 34, ${0.6 + proximity * 0.3})`;
   }
 }
 
@@ -276,6 +284,8 @@ cursorActive = false;
  // Resume idle floating
  studentWrap.classList.add("idle");
  shadowWrap.classList.add("idle");
+
+
 
 
  // Reset visuals
