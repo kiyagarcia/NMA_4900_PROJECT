@@ -14,17 +14,34 @@ let audioUnlocked = false;
 function unlockAudio() {
   if (audioUnlocked) return;
 
-  heartbeatSound.volume = 0;
+  heartbeatSound.muted = true;
+
   heartbeatSound.play().then(() => {
+    audioUnlocked = true;
+
     heartbeatSound.pause();
     heartbeatSound.currentTime = 0;
-    audioUnlocked = true;
+
+    heartbeatSound.muted = false;
+
+    const instruction = document.getElementById("soundInstruction");
+
+if (instruction) {
+  // wait a bit so user actually processes it
+  setTimeout(() => {
+    instruction.classList.add("fade-out");
+  }, 1200); // 1.2 seconds delay before fading
+}
+
+    // 👇 start it immediately after unlocking
+    heartbeatSound.play().catch(() => {});
   }).catch(() => {});
 }
 
 // real interactions browsers accept
 window.addEventListener("click", unlockAudio);
 window.addEventListener("keydown", unlockAudio);
+
 
 shadowWrap.style.opacity = "1";
 document.body.classList.add("shadow-active");
@@ -85,7 +102,7 @@ student.addEventListener("mouseleave", () => {
   cursorActive = true;
 
   if (audioUnlocked) {
-    heartbeatSound.volume = 0.05;
+    heartbeatSound.currentTime = 0; // 🔥 start fresh every time
     heartbeatSound.play().catch(() => {});
   }
 });
@@ -101,18 +118,11 @@ hand.style.top = e.clientY + "px";
 
   scene.style.filter = "none";
 
-  if (cursorActive) {
-  // make sure it's playing
-  if (heartbeatSound.paused) {
-    heartbeatSound.currentTime = 0;
-    heartbeatSound.play().catch(() => {});
-  }
+ if (cursorActive && audioUnlocked) {
+  heartbeatSound.play().catch(() => {}); // 🔥 always ensure it's running
 
-  // smoother + audible volume curve
-  heartbeatSound.volume = Math.max(0.05, proximity * 0.8);
-
-  // slow → fast
-  heartbeatSound.playbackRate = 0.6 + proximity * 1.6;
+  heartbeatSound.volume = Math.max(0.08, proximity * 0.8);
+  heartbeatSound.playbackRate = 0.7 + proximity * 1.6;
 }
 
 
@@ -177,28 +187,13 @@ shield.style.opacity = shieldStrength * 0.8;
 const shieldScale = 1 + shieldStrength * 0.05;
 shield.style.transform = `translate(-50%, -50%) scale(${shieldScale})`;
 
- if (proximity > 0.6 && !heartTriggered) {
+if (proximity > 0.6 && !heartTriggered) {
   heartTriggered = true;
 
-  // restart visual
   heart.style.animation = "none";
   heart.offsetHeight;
   heart.style.animation = "heartbeat 2.2s ease-in-out infinite";
 
-  // 🔥 THIS is what you add
-  heartbeatSound.currentTime = 0;
-
-  // make sure it plays
-  heartbeatSound.play().catch(() => {});
-}
-
-if (cursorActive) {
-  if (heartbeatSound.paused) {
-    heartbeatSound.play().catch(() => {});
-  }
-
-  heartbeatSound.volume = Math.max(0.05, proximity * 0.8);
-  heartbeatSound.playbackRate = 0.6 + proximity * 1.6;
 }
 
  if (proximity > 0.5) {
